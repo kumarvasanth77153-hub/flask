@@ -15,4 +15,4 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://forai77153_db_user:XySHreO05LWtO6Tx@cluster0.a7tc7q6.mongodb.net/local_service_db?retryWrites=true&w=majority

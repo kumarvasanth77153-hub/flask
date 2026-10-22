@@ -9,7 +9,18 @@ _db = None
 def get_client():
     global _client
     if _client is None:
-        _client = pymongo.MongoClient(Config.MONGODB_URI)
+        try:
+            import certifi
+            _client = pymongo.MongoClient(
+                Config.MONGODB_URI,
+                tlsCAFile=certifi.where(),
+                serverSelectionTimeoutMS=8000
+            )
+        except Exception:
+            _client = pymongo.MongoClient(
+                Config.MONGODB_URI,
+                serverSelectionTimeoutMS=8000
+            )
     return _client
 
 def get_db():

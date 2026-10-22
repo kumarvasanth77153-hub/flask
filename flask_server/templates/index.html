@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}UrbanAid - Local Service Booking & Workforce Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container hero-content">
+    <div class="hero-badge">
+      <span>🚀 Instant Doorstep Assistance</span>
+    </div>
+    <h1 class="hero-title">
+      Trusted Local Services, <span>At Your Command</span>
+    </h1>
+    <p class="hero-subtitle">
+      Find certified electricians, plumbers, carpenters, and appliance repair technicians in your neighborhood. Fast booking with transparent hourly rates.
+    </p>
+
+    <!-- Search Form -->
+    <form action="{{ url_for('web.services') }}" method="GET" class="hero-search-box">
+      <input 
+        type="text" 
+        name="q" 
+        class="hero-search-input" 
+        placeholder="What service do you need? (e.g. Electrician, Tap Repair...)"
+      >
+      <select name="category" class="hero-search-select">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+          <option value="{{ cat.name }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">Find Experts</button>
+    </form>
+  </div>
+</section>
+
+<!-- Stats Strip -->
+<div class="container">
+  <div class="stats-strip">
+    <div class="stat-item">
+      <div class="stat-number">1,250+</div>
+      <div class="stat-label">Jobs Completed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">Verified Tradespeople</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">4.8★</div>
+      <div class="stat-label">Average Satisfaction</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">&lt; 30 min</div>
+      <div class="stat-label">Fast Dispatch</div>
+    </div>
+  </div>
+</div>
+
+<!-- Service Categories Section -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Browse Categories</span>
+      <h2 class="section-title">Popular Home & Commercial Services</h2>
+      <p class="section-subtitle">Select a category to view qualified verified providers in your local area.</p>
+    </div>
+
+    <div class="categories-grid">
+      {% for cat in categories %}
+        <a href="{{ url_for('web.services', category=cat.name) }}" class="category-card">
+          <div class="category-icon">
+            {% if 'Electric' in cat.name %}⚡
+            {% elif 'Plumb' in cat.name %}🔧
+            {% elif 'AC' in cat.name or 'Cool' in cat.name %}❄️
+            {% elif 'Carpent' in cat.name %}🪚
+            {% elif 'Clean' in cat.name %}🧹
+            {% elif 'Paint' in cat.name %}🎨
+            {% elif 'Appliance' in cat.name %}📺
+            {% elif 'Pest' in cat.name %}🐜
+            {% else %}🛠️
+            {% endif %}
+          </div>
+          <div class="category-name">{{ cat.name }}</div>
+          <div class="category-count">Verified Pros</div>
+        </a>
+      {% else %}
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 2rem;">
+          No categories found in database.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Top-Rated Service Providers -->
+<section class="section" style="background-color: #f1f5f9; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Verified Pros</span>
+      <h2 class="section-title">Top-Rated Local Service Providers</h2>
+      <p class="section-subtitle">Skilled specialists with proven high customer satisfaction ratings.</p>
+    </div>
+
+    <div class="providers-grid">
+      {% for provider in featured_providers %}
+        <div class="provider-card">
+          <div>
+            <div class="provider-header">
+              <div class="provider-avatar">
+                {{ provider.user.name[:1]|upper if provider.user else 'P' }}
+              </div>
+              <div class="provider-meta">
+                <h3>{{ provider.user.name if provider.user else 'Service Specialist' }}</h3>
+                <span class="badge badge-primary">{{ provider.category_name }}</span>
+              </div>
+            </div>
+
+            <div class="provider-rating">
+              <span>★</span>
+              <span>{{ "%.1f"|format(provider.averageRating|default(4.8, true)) }}</span>
+              <span style="color: var(--text-muted); font-weight: 400;">({{ provider.totalReviews|default(5) }} reviews)</span>
+            </div>
+
+            <p class="provider-desc">
+              {{ provider.description or 'Experienced and certified professional providing top quality service.' }}
+            </p>
+
+            <div class="provider-details-list">
+              <div>📍 {{ provider.address or 'Local Area' }}</div>
+              <div>💼 {{ provider.experience|default(4) }} yrs experience</div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem;">
+            <div class="provider-price">
+              ₹{{ provider.serviceCharge|int }}<span> / hr</span>
+            </div>
+            <a href="{{ url_for('web.book_provider', provider_id=provider._id) }}" class="btn btn-primary btn-sm">
+              Book Service &rarr;
+            </a>
+          </div>
+        </div>
+      {% else %}
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem;">
+          No service providers currently available.
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="text-align: center; margin-top: 2.5rem;">
+      <a href="{{ url_for('web.services') }}" class="btn btn-secondary btn-lg">
+        Explore All Available Services &rarr;
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Simple & Fast</span>
+      <h2 class="section-title">How UrbanAid Works</h2>
+      <p class="section-subtitle">Book verified service professionals in three seamless steps.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-icon">🔍</div>
+        <h3 class="step-title">Choose Service & Pro</h3>
+        <p class="step-desc">
+          Browse by category, inspect customer reviews, hourly rates, and select the best professional near you.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-icon">📅</div>
+        <h3 class="step-title">Schedule Convenient Slot</h3>
+        <p class="step-desc">
+          Specify your location, pick an available date and time slot, and describe the problem details.
+        </p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-icon">✅</div>
+        <h3 class="step-title">Relax & Done</h3>
+        <p class="step-desc">
+          The verified provider arrives promptly at your doorstep. Inspect the completed work, pay seamlessly, and leave a review.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Become a Provider Callout -->
+<section class="section" style="background: var(--hero-gradient); border-top: 1px solid var(--border);">
+  <div class="container" style="text-align: center; max-width: 750px;">
+    <span class="badge badge-success" style="margin-bottom: 1rem;">Earn More With Us</span>
+    <h2 class="section-title">Are You a Skilled Tradesperson or Technician?</h2>
+    <p class="section-subtitle" style="margin-bottom: 2rem;">
+      Join hundreds of local electricians, plumbers, and technicians growing their business with UrbanAid. Set your hourly rates and receive direct job requests.
+    </p>
+    <a href="{{ url_for('web.register') }}" class="btn btn-primary btn-lg">
+      Register as a Service Provider
+    </a>
+  </div>
+</section>
+{% endblock %}

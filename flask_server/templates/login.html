@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - UrbanAid Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div style="font-size: 2.25rem; margin-bottom: 0.5rem;">🔐</div>
+        <h2>Welcome Back</h2>
+        <p>Sign in to manage your appointments, jobs, or platform services</p>
+      </div>
+
+      <!-- Quick Fill Demo Credentials Box -->
+      <div class="demo-credentials-box">
+        <h4>⚡ One-Click Demo Logins</h4>
+        <div class="demo-buttons-row">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCredentials('customer')">
+            👤 Customer
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCredentials('provider')">
+            🛠️ Provider
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fillCredentials('admin')">
+            ⚙️ Admin
+          </button>
+        </div>
+      </div>
+
+      <form action="{{ url_for('web.login') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input 
+            type="email" 
+            id="login-email" 
+            name="email" 
+            class="form-control" 
+            placeholder="e.g. customer@urbanaid.com" 
+            required 
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input 
+            type="password" 
+            id="login-password" 
+            name="password" 
+            class="form-control" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.25rem;">
+          Sign In &rarr;
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--text-muted);">
+        Don't have an account? 
+        <a href="{{ url_for('web.register') }}" style="font-weight: 600;">Create an account</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

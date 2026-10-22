@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Control Console - Admin | UrbanAid{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <div class="container dashboard-banner">
+    <div class="dashboard-title">
+      <h1>Platform Administrator Console ⚙️</h1>
+      <p>System metrics, category taxonomies, provider management, and audit trails.</p>
+    </div>
+    <div>
+      <span class="badge badge-danger" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+        Superuser Access Active
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Key Platform Analytics Metrics -->
+  <div class="dashboard-metrics">
+    <div class="metric-card">
+      <div class="metric-icon indigo">👥</div>
+      <div class="metric-info">
+        <h3>{{ total_users }}</h3>
+        <p>Total Registered Users</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon amber">🛠️</div>
+      <div class="metric-info">
+        <h3>{{ total_providers }}</h3>
+        <p>Active Service Providers</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon blue">📦</div>
+      <div class="metric-info">
+        <h3>{{ total_bookings }}</h3>
+        <p>Total Bookings Processed</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon green">💳</div>
+      <div class="metric-info">
+        <h3>₹{{ total_volume|int }}</h3>
+        <p>Gross Service Volume</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start; margin-bottom: 2.5rem;">
+    <!-- Recent Bookings Monitor -->
+    <div class="table-card">
+      <div class="table-card-header">
+        <h3>Live Booking Activity Monitor</h3>
+        <span class="badge badge-primary">Recent Transactions</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in recent_bookings %}
+              <tr>
+                <td><strong>{{ b.customer_name or 'Customer' }}</strong></td>
+                <td>{{ b.date }}</td>
+                <td>{{ b.category_name or 'Service' }}</td>
+                <td style="font-weight: 600;">₹{{ b.serviceCharge|int }}</td>
+                <td>
+                  {% if b.status == 'Pending' %}
+                    <span class="badge badge-warning">Pending</span>
+                  {% elif b.status == 'Confirmed' %}
+                    <span class="badge badge-info">Confirmed</span>
+                  {% elif b.status == 'In Progress' %}
+                    <span class="badge badge-primary">In Progress</span>
+                  {% elif b.status == 'Completed' %}
+                    <span class="badge badge-success">Completed</span>
+                  {% else %}
+                    <span class="badge badge-danger">{{ b.status }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                  No bookings logged in platform.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Category Add Card -->
+    <div class="table-card" style="padding: 1.5rem;">
+      <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem;">+ Add Service Category</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Expand platform service offerings with a new trade taxonomy.
+      </p>
+
+      <form action="{{ url_for('web.admin_create_category') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="cat-name">Category Name *</label>
+          <input 
+            type="text" 
+            id="cat-name" 
+            name="name" 
+            class="form-control" 
+            placeholder="e.g. Solar Panel Cleaning" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cat-icon">Icon Keyword / Emoji</label>
+          <input 
+            type="text" 
+            id="cat-icon" 
+            name="icon" 
+            class="form-control" 
+            placeholder="☀️ or Sun" 
+            value="🛠️"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cat-desc">Description</label>
+          <textarea 
+            id="cat-desc" 
+            name="description" 
+            class="form-control" 
+            rows="2" 
+            placeholder="Brief scope of service..."
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Create Category &rarr;
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Management Table -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h3>Registered Users & Access Control ({{ users|length }})</h3>
+      <span class="badge badge-info">RBAC Management</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Account Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td><strong>{{ u.name }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.phone or 'N/A' }}</td>
+              <td>
+                {% if u.role == 'admin' %}
+                  <span class="badge badge-danger">Admin</span>
+                {% elif u.role == 'provider' %}
+                  <span class="badge badge-info">Provider</span>
+                {% else %}
+                  <span class="badge badge-primary">Customer</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.isActive %}
+                  <span class="badge badge-success">Active</span>
+                {% else %}
+                  <span class="badge badge-danger">Suspended</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.role != 'admin' %}
+                  <form action="{{ url_for('web.admin_toggle_user_status', user_id=u._id) }}" method="POST">
+                    {% if u.isActive %}
+                      <button type="submit" class="btn btn-danger btn-sm">Suspend</button>
+                    {% else %}
+                      <button type="submit" class="btn btn-success btn-sm">Activate</button>
+                    {% endif %}
+                  </form>
+                {% else %}
+                  <span style="font-size: 0.8rem; color: var(--text-light);">Protected</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

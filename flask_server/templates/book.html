@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ provider.user.name if provider.user else 'Service' }} - UrbanAid{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem; max-width: 900px;">
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('web.services') }}" style="color: var(--text-muted); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 0.75rem;">
+      &larr; Back to Services
+    </a>
+    <h1 style="font-size: 2.15rem; margin-bottom: 0.35rem;">Schedule Service Appointment</h1>
+    <p style="color: var(--text-muted);">Fill in the details below to request a doorstep visit from this certified expert.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start;">
+    <!-- Booking Form Card -->
+    <div class="table-card" style="padding: 2rem;">
+      <form action="{{ url_for('web.book_provider', provider_id=provider._id) }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="booking-date">Preferred Service Date *</label>
+          <input 
+            type="date" 
+            id="booking-date" 
+            name="date" 
+            class="form-control" 
+            required 
+            value="{{ today_date }}"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="booking-time">Time Slot *</label>
+          <select id="booking-time" name="time" class="form-control" required>
+            <option value="09:00 AM - 11:00 AM">Morning: 09:00 AM - 11:00 AM</option>
+            <option value="11:00 AM - 01:00 PM" selected>Late Morning: 11:00 AM - 01:00 PM</option>
+            <option value="02:00 PM - 04:00 PM">Afternoon: 02:00 PM - 04:00 PM</option>
+            <option value="04:00 PM - 06:00 PM">Evening: 04:00 PM - 06:00 PM</option>
+            <option value="06:00 PM - 08:00 PM">Late Evening: 06:00 PM - 08:00 PM</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="booking-address">Full Service Address *</label>
+          <textarea 
+            id="booking-address" 
+            name="address" 
+            class="form-control" 
+            rows="3" 
+            placeholder="Door number, street name, apartment/building, landmark, city..." 
+            required
+          >{{ current_user.address if current_user and current_user.address else '' }}</textarea>
+          <span class="form-help">Enter where the technician should report for work.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="booking-desc">Describe the Problem or Requirements *</label>
+          <textarea 
+            id="booking-desc" 
+            name="description" 
+            class="form-control" 
+            rows="3" 
+            placeholder="Explain what needs to be fixed or installed (e.g., Short circuit in living room switchboard)..." 
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
+          Confirm Booking Request &rarr;
+        </button>
+      </form>
+    </div>
+
+    <!-- Provider Summary Sidebar -->
+    <div class="provider-card" style="box-shadow: var(--shadow-md);">
+      <div>
+        <div class="provider-header">
+          <div class="provider-avatar">
+            {{ provider.user.name[:1]|upper if provider.user else 'P' }}
+          </div>
+          <div class="provider-meta">
+            <h3>{{ provider.user.name if provider.user else 'Service Specialist' }}</h3>
+            <span class="badge badge-primary">{{ provider.category_name }}</span>
+          </div>
+        </div>
+
+        <div class="provider-rating">
+          <span>★</span>
+          <span>{{ "%.1f"|format(provider.averageRating|default(4.8, true)) }}</span>
+          <span style="color: var(--text-muted); font-weight: 400;">({{ provider.totalReviews|default(0) }} ratings)</span>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); margin: 1rem 0; padding-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+            <span style="color: var(--text-muted);">Experience:</span>
+            <strong>{{ provider.experience|default(3) }} Years</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+            <span style="color: var(--text-muted);">Base Rate:</span>
+            <strong>₹{{ provider.serviceCharge|int }} / hr</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+            <span style="color: var(--text-muted);">Location:</span>
+            <span>{{ provider.address or 'Local Service Zone' }}</span>
+          </div>
+        </div>
+
+        <div style="background-color: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); border: 1px dashed var(--border); margin-top: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; color: var(--text-main);">Initial Booking Total:</span>
+            <span style="font-size: 1.35rem; font-weight: 800; color: var(--primary);">₹{{ provider.serviceCharge|int }}</span>
+          </div>
+          <p style="font-size: 0.775rem; color: var(--text-muted); margin-top: 0.35rem;">
+            * Pay after service completion. Transparent pricing guaranteed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

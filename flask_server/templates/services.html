@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Local Services - UrbanAid{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2.5rem;">
+  <!-- Header -->
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">Find Local Service Professionals</h1>
+    <p style="color: var(--text-muted); font-size: 1.05rem;">
+      Browse available certified technicians and service providers in your vicinity.
+    </p>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <form action="{{ url_for('web.services') }}" method="GET" style="margin-bottom: 1.75rem;">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <input 
+        type="text" 
+        name="q" 
+        value="{{ current_query or '' }}" 
+        placeholder="Search provider name, skill, or keywords..."
+        class="form-control"
+        style="flex: 1; min-width: 260px;"
+      >
+      {% if current_category %}
+        <input type="hidden" name="category" value="{{ current_category }}">
+      {% endif %}
+      <button type="submit" class="btn btn-primary">Search</button>
+      {% if current_query or current_category %}
+        <a href="{{ url_for('web.services') }}" class="btn btn-secondary">Clear Filters</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Category Pills Filter -->
+  <div class="filter-bar">
+    <a href="{{ url_for('web.services', q=current_query) }}" class="filter-pill {% if not current_category %}active{% endif %}">
+      All Categories
+    </a>
+    {% for cat in categories %}
+      <a 
+        href="{{ url_for('web.services', category=cat.name, q=current_query) }}" 
+        class="filter-pill {% if current_category == cat.name %}active{% endif %}"
+      >
+        {{ cat.name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Results Count -->
+  <div style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.95rem;">
+    Showing <strong>{{ providers|length }}</strong> available provider{% if providers|length != 1 %}s{% endif %}
+    {% if current_category %} in <strong>{{ current_category }}</strong>{% endif %}
+    {% if current_query %} matching "<em>{{ current_query }}</em>"{% endif %}
+  </div>
+
+  <!-- Providers Grid -->
+  <div class="providers-grid">
+    {% for provider in providers %}
+      <div class="provider-card">
+        <div>
+          <div class="provider-header">
+            <div class="provider-avatar">
+              {{ provider.user.name[:1]|upper if provider.user else 'P' }}
+            </div>
+            <div class="provider-meta">
+              <h3>{{ provider.user.name if provider.user else 'Verified Expert' }}</h3>
+              <div style="display: flex; gap: 0.4rem; align-items: center; margin-top: 0.2rem;">
+                <span class="badge badge-primary">{{ provider.category_name }}</span>
+                {% if provider.isAvailable %}
+                  <span class="badge badge-success">Available</span>
+                {% else %}
+                  <span class="badge badge-warning">Busy</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="provider-rating">
+            <span>★</span>
+            <span>{{ "%.1f"|format(provider.averageRating|default(4.8, true)) }}</span>
+            <span style="color: var(--text-muted); font-weight: 400;">({{ provider.totalReviews|default(0) }} customer reviews)</span>
+          </div>
+
+          <p class="provider-desc">
+            {{ provider.description or 'Experienced and certified professional providing top quality service in your local neighborhood.' }}
+          </p>
+
+          <div class="provider-details-list">
+            <div>📍 {{ provider.address or 'City Center' }}</div>
+            <div>💼 {{ provider.experience|default(3) }} yrs exp</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem;">
+          <div class="provider-price">
+            ₹{{ provider.serviceCharge|int }}<span> / hr</span>
+          </div>
+          <a href="{{ url_for('web.book_provider', provider_id=provider._id) }}" class="btn btn-primary btn-sm">
+            Book Service &rarr;
+          </a>
+        </div>
+      </div>
+    {% else %}
+      <div style="grid-column: 1 / -1; text-align: center; background: var(--bg-surface); padding: 4rem 2rem; border-radius: var(--radius-lg); border: 1px dashed var(--border);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+        <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem;">No Providers Found</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Try choosing another category or clearing your search term.</p>
+        <a href="{{ url_for('web.services') }}" class="btn btn-secondary">Reset Filters</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

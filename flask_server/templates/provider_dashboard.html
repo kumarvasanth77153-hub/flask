@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Provider Portal - UrbanAid{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <div class="container dashboard-banner">
+    <div class="dashboard-title">
+      <h1>Provider Portal: {{ session.get('user_name', 'Technician') }} 🛠️</h1>
+      <p>{{ profile.serviceCategory_name|default('Professional Tradesperson') }} &bull; {{ profile.experience|default(4) }} Years Experience</p>
+    </div>
+
+    <!-- Live Availability Toggle -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <form action="{{ url_for('web.provider_toggle_availability') }}" method="POST">
+        {% if profile.isAvailable %}
+          <button type="submit" class="btn btn-success">
+            🟢 Status: Available for Jobs
+          </button>
+        {% else %}
+          <button type="submit" class="btn btn-secondary">
+            ⏸️ Status: Currently Busy / Off
+          </button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Metrics Overview -->
+  <div class="dashboard-metrics">
+    <div class="metric-card">
+      <div class="metric-icon indigo">📋</div>
+      <div class="metric-info">
+        <h3>{{ bookings|length }}</h3>
+        <p>Total Assigned Jobs</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon amber">⚡</div>
+      <div class="metric-info">
+        <h3>{{ pending_requests|length }}</h3>
+        <p>New Requests</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon green">★</div>
+      <div class="metric-info">
+        <h3>{{ "%.1f"|format(profile.averageRating|default(4.8, true)) }}</h3>
+        <p>Rating ({{ profile.totalReviews|default(0) }} Reviews)</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon blue">💵</div>
+      <div class="metric-info">
+        <h3>₹{{ total_earnings|int }}</h3>
+        <p>Completed Earnings</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Booking Requests Section -->
+  <div class="table-card" style="border-left: 4px solid var(--warning);">
+    <div class="table-card-header" style="background-color: var(--warning-bg);">
+      <h3 style="color: var(--warning-text);">⚠️ Incoming Booking Requests ({{ pending_requests|length }})</h3>
+      <span class="badge badge-warning">Action Required</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Customer Name</th>
+            <th>Phone</th>
+            <th>Date & Time</th>
+            <th>Service Address</th>
+            <th>Problem Description</th>
+            <th>Est. Charge</th>
+            <th>Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in pending_requests %}
+            <tr>
+              <td><strong>{{ b.customer.name if b.customer else 'Customer' }}</strong></td>
+              <td>📞 {{ b.customer.phone if b.customer else 'N/A' }}</td>
+              <td>
+                <div>📅 {{ b.date }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">⏰ {{ b.time }}</div>
+              </td>
+              <td style="max-width: 200px; font-size: 0.85rem;">{{ b.address }}</td>
+              <td style="max-width: 220px; font-size: 0.85rem;">{{ b.description }}</td>
+              <td style="font-weight: 700; color: var(--primary);">₹{{ b.serviceCharge|int }}</td>
+              <td>
+                <div style="display: flex; gap: 0.5rem;">
+                  <form action="{{ url_for('web.provider_booking_action', booking_id=b._id) }}" method="POST">
+                    <input type="hidden" name="action" value="accept">
+                    <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                  </form>
+                  <form action="{{ url_for('web.provider_booking_action', booking_id=b._id) }}" method="POST">
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                No new pending booking requests. You are all caught up!
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Active & Confirmed Jobs -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h3>Active & Confirmed Appointments ({{ active_jobs|length }})</h3>
+      <span class="badge badge-info">In Progress</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Contact</th>
+            <th>Slot</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Update Stage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in active_jobs %}
+            <tr>
+              <td><strong>{{ b.customer.name if b.customer else 'Customer' }}</strong></td>
+              <td>📞 {{ b.customer.phone if b.customer else 'N/A' }}</td>
+              <td>{{ b.date }} ({{ b.time }})</td>
+              <td style="max-width: 220px; font-size: 0.85rem;">{{ b.address }}</td>
+              <td>
+                {% if b.status == 'Confirmed' %}
+                  <span class="badge badge-info">Confirmed</span>
+                {% elif b.status == 'In Progress' %}
+                  <span class="badge badge-primary">In Progress</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if b.status == 'Confirmed' %}
+                  <form action="{{ url_for('web.provider_update_status', booking_id=b._id) }}" method="POST">
+                    <input type="hidden" name="status" value="In Progress">
+                    <button type="submit" class="btn btn-primary btn-sm">Start Job</button>
+                  </form>
+                {% elif b.status == 'In Progress' %}
+                  <form action="{{ url_for('web.provider_update_status', booking_id=b._id) }}" method="POST">
+                    <input type="hidden" name="status" value="Completed">
+                    <button type="submit" class="btn btn-success btn-sm">Mark Completed</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                No active jobs currently in progress.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Job History & Completed Bookings -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h3>Completed Jobs & History ({{ completed_jobs|length }})</h3>
+      <span class="badge badge-success">Archived</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Charge</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in completed_jobs %}
+            <tr>
+              <td>{{ b.customer.name if b.customer else 'Customer' }}</td>
+              <td>{{ b.date }}</td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">{{ b.address }}</td>
+              <td style="font-weight: 700; color: var(--success-text);">₹{{ b.serviceCharge|int }}</td>
+              <td>
+                {% if b.status == 'Completed' %}
+                  <span class="badge badge-success">Completed</span>
+                {% else %}
+                  <span class="badge badge-danger">{{ b.status }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                No past completed jobs yet.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

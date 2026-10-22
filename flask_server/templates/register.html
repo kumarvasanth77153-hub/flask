@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Create an Account - UrbanAid{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-wrapper" style="max-width: 580px;">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div style="font-size: 2.25rem; margin-bottom: 0.5rem;">✨</div>
+        <h2>Create Your Account</h2>
+        <p>Join UrbanAid as a customer needing help or a professional offering services</p>
+      </div>
+
+      <form action="{{ url_for('web.register') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="reg-role">I Want To *</label>
+          <select id="reg-role" name="role" class="form-control" required>
+            <option value="customer" selected>Book Services (Customer)</option>
+            <option value="provider">Offer Professional Services (Provider)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-name">Full Name *</label>
+          <input 
+            type="text" 
+            id="reg-name" 
+            name="name" 
+            class="form-control" 
+            placeholder="e.g. Ramesh Kumar" 
+            required
+          >
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address *</label>
+            <input 
+              type="email" 
+              id="reg-email" 
+              name="email" 
+              class="form-control" 
+              placeholder="name@example.com" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-phone">Phone Number *</label>
+            <input 
+              type="tel" 
+              id="reg-phone" 
+              name="phone" 
+              class="form-control" 
+              placeholder="9876543210" 
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Password (Minimum 6 characters) *</label>
+          <input 
+            type="password" 
+            id="reg-password" 
+            name="password" 
+            class="form-control" 
+            placeholder="••••••••" 
+            minlength="6" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-address">City / Neighborhood Address *</label>
+          <input 
+            type="text" 
+            id="reg-address" 
+            name="address" 
+            class="form-control" 
+            placeholder="e.g. Anna Nagar, Madurai" 
+            required
+          >
+        </div>
+
+        <!-- Provider Specific Fields (Toggled by JavaScript) -->
+        <div id="provider-specific-fields" style="display: none; background-color: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 1rem; color: var(--primary);">🛠️ Provider Qualifications</h4>
+          
+          <div class="form-group">
+            <label class="form-label" for="reg-category">Primary Service Trade *</label>
+            <select id="reg-category" name="category" class="form-control">
+              {% for cat in categories %}
+                <option value="{{ cat._id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="reg-charge">Hourly Rate (₹) *</label>
+              <input 
+                type="number" 
+                id="reg-charge" 
+                name="serviceCharge" 
+                class="form-control" 
+                placeholder="400" 
+                min="100" 
+                value="400"
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="reg-exp">Experience (Years) *</label>
+              <input 
+                type="number" 
+                id="reg-exp" 
+                name="experience" 
+                class="form-control" 
+                placeholder="3" 
+                min="0" 
+                value="3"
+              >
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="reg-bio">Short Professional Bio</label>
+            <textarea 
+              id="reg-bio" 
+              name="description" 
+              class="form-control" 
+              rows="2" 
+              placeholder="Summary of skills and certifications..."
+            ></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.25rem;">
+          Register Now &rarr;
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--text-muted);">
+        Already have an account? 
+        <a href="{{ url_for('web.login') }}" style="font-weight: 600;">Sign in here</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

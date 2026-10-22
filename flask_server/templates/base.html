@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}UrbanAid - Local Service Booking & Workforce Management{% endblock %}</title>
+  <meta name="description" content="On-demand local service booking platform built with Python Flask, Jinja2, HTML5, CSS3, and MongoDB.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('web.home') }}" class="brand-logo">
+        <div class="brand-icon">⚡</div>
+        <span>UrbanAid</span>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('web.home') }}" class="nav-link {% if request.endpoint == 'web.home' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('web.services') }}" class="nav-link {% if request.endpoint == 'web.services' %}active{% endif %}">Explore Services</a></li>
+          <li><a href="{{ url_for('web.home') }}#how-it-works" class="nav-link">How It Works</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        {% if session.get('user_id') %}
+          {% if session.get('user_role') == 'customer' %}
+            <a href="{{ url_for('web.customer_dashboard') }}" class="btn btn-secondary btn-sm">
+              <span>👤 My Bookings</span>
+            </a>
+          {% elif session.get('user_role') == 'provider' %}
+            <a href="{{ url_for('web.provider_dashboard') }}" class="btn btn-secondary btn-sm">
+              <span>🛠️ Provider Portal</span>
+            </a>
+          {% elif session.get('user_role') == 'admin' %}
+            <a href="{{ url_for('web.admin_dashboard') }}" class="btn btn-secondary btn-sm">
+              <span>⚙️ Admin Panel</span>
+            </a>
+          {% endif %}
+
+          <span class="badge {% if session.get('user_role') == 'admin' %}badge-danger{% elif session.get('user_role') == 'provider' %}badge-info{% else %}badge-primary{% endif %}">
+            {{ session.get('user_role', '')|capitalize }}
+          </span>
+
+          <a href="{{ url_for('web.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+        {% else %}
+          <a href="{{ url_for('web.login') }}" class="btn btn-secondary btn-sm">Login</a>
+          <a href="{{ url_for('web.register') }}" class="btn btn-primary btn-sm">Get Started</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Notifications -->
+  <div class="container alerts-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
+            <span>{{ message }}</span>
+            <button class="alert-close" aria-label="Close notification">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Dynamic Page Content -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Comprehensive Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>⚡ UrbanAid Platform</h3>
+          <p>
+            An integrated hyper-local service booking & workforce platform connecting customers with vetted tradespeople in real-time.
+          </p>
+          <div style="margin-top: 1rem;">
+            <span class="academic-badge">Python Flask & Jinja2 SSR Architecture</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Services</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('web.services', category='Electrician') }}">Electrician</a></li>
+            <li><a href="{{ url_for('web.services', category='Plumber') }}">Plumbing & Leaks</a></li>
+            <li><a href="{{ url_for('web.services', category='AC Repair & Service') }}">AC Repair & HVAC</a></li>
+            <li><a href="{{ url_for('web.services', category='Carpentry') }}">Carpentry</a></li>
+            <li><a href="{{ url_for('web.services') }}">All Categories &rarr;</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Quick Access</h4>
+          <ul class="footer-links">
+            <li><a href="{{ url_for('web.home') }}">Home</a></li>
+            <li><a href="{{ url_for('web.services') }}">Find Experts</a></li>
+            <li><a href="{{ url_for('web.login') }}">Account Login</a></li>
+            <li><a href="{{ url_for('web.register') }}">Join as Provider</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Academic Project</h4>
+          <ul class="footer-links">
+            <li><a href="#">Course: 23CS11E</a></li>
+            <li><a href="#">Web Frameworks (Python)</a></li>
+            <li><a href="#">National Engg College</a></li>
+            <li><a href="#">MongoDB Backend Engine</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 UrbanAid. Pure HTML5, CSS3 & Python Flask Web Application. All rights reserved.</p>
+        <span class="academic-badge">100% Flask Server-Side Rendered (No React)</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

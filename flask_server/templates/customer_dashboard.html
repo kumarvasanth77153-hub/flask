@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - Customer Dashboard | UrbanAid{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+  <div class="container dashboard-banner">
+    <div class="dashboard-title">
+      <h1>Hello, {{ session.get('user_name', 'Customer') }} 👋</h1>
+      <p>Track your scheduled services, provider updates, and job histories.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('web.services') }}" class="btn btn-primary">
+        + Book New Service
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Metrics Overview -->
+  <div class="dashboard-metrics">
+    <div class="metric-card">
+      <div class="metric-icon indigo">📋</div>
+      <div class="metric-info">
+        <h3>{{ bookings|length }}</h3>
+        <p>Total Bookings</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon amber">⏳</div>
+      <div class="metric-info">
+        <h3>{{ pending_count }}</h3>
+        <p>Pending / In-Progress</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon green">✅</div>
+      <div class="metric-info">
+        <h3>{{ completed_count }}</h3>
+        <p>Completed Jobs</p>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon blue">💰</div>
+      <div class="metric-info">
+        <h3>₹{{ total_spent|int }}</h3>
+        <p>Total Spent</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookings List Table -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <h3>Your Service Appointments ({{ bookings|length }})</h3>
+      <span class="badge badge-primary">Customer Portal</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Provider / Trade</th>
+            <th>Scheduled For</th>
+            <th>Location</th>
+            <th>Service Details</th>
+            <th>Fee</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+            <tr>
+              <td>
+                <div style="font-weight: 600; color: var(--text-main);">
+                  {{ b.provider_name or 'Service Specialist' }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--primary);">
+                  {{ b.category_name or 'General Service' }}
+                </div>
+              </td>
+              <td>
+                <div style="font-weight: 500;">📅 {{ b.date }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">⏰ {{ b.time }}</div>
+              </td>
+              <td style="max-width: 220px; font-size: 0.85rem; color: var(--text-muted);">
+                {{ b.address }}
+              </td>
+              <td style="max-width: 220px; font-size: 0.85rem;">
+                {{ b.description or 'Standard inspection & repair' }}
+              </td>
+              <td style="font-weight: 700; color: var(--text-main);">
+                ₹{{ b.serviceCharge|int }}
+              </td>
+              <td>
+                {% if b.status == 'Pending' %}
+                  <span class="badge badge-warning">Pending</span>
+                {% elif b.status == 'Confirmed' %}
+                  <span class="badge badge-info">Confirmed</span>
+                {% elif b.status == 'In Progress' %}
+                  <span class="badge badge-primary">In Progress</span>
+                {% elif b.status == 'Completed' %}
+                  <span class="badge badge-success">Completed</span>
+                {% elif b.status == 'Cancelled' or b.status == 'Rejected' %}
+                  <span class="badge badge-danger">{{ b.status }}</span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ b.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if b.status == 'Pending' %}
+                  <form action="{{ url_for('web.customer_cancel_booking', booking_id=b._id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                  </form>
+                {% elif b.status == 'Completed' %}
+                  {% if b.has_review %}
+                    <span style="font-size: 0.825rem; color: #d97706; font-weight: 600;">
+                      ★ Rated ({{ b.review_rating }}★)
+                    </span>
+                  {% else %}
+                    <button 
+                      type="button" 
+                      class="btn btn-primary btn-sm" 
+                      onclick="openReviewModal('{{ b._id }}', '{{ b.provider_name }}', '{{ b.category_name }}')"
+                    >
+                      ★ Rate Pro
+                    </button>
+                  {% endif %}
+                {% else %}
+                  <span style="font-size: 0.8rem; color: var(--text-light);">-</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                You have not booked any services yet.
+                <div style="margin-top: 1rem;">
+                  <a href="{{ url_for('web.services') }}" class="btn btn-primary btn-sm">Browse Available Services</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Submitting Review -->
+<div class="modal-overlay" id="review-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-size: 1.25rem;">Rate Your Service Experience</h3>
+      <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+    </div>
+
+    <form action="{{ url_for('web.create_review') }}" method="POST">
+      <input type="hidden" name="bookingId" id="review-booking-id" value="">
+
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+        How was your service with <strong id="modal-provider-name" style="color: var(--text-main);">Specialist</strong> for <span id="modal-service-name"></span>?
+      </p>
+
+      <div class="form-group" style="text-align: center;">
+        <label class="form-label">Select Your Star Rating</label>
+        <div class="star-rating">
+          <input type="radio" id="star5" name="rating" value="5" required><label for="star5" title="5 stars">★</label>
+          <input type="radio" id="star4" name="rating" value="4"><label for="star4" title="4 stars">★</label>
+          <input type="radio" id="star3" name="rating" value="3"><label for="star3" title="3 stars">★</label>
+          <input type="radio" id="star2" name="rating" value="2"><label for="star2" title="2 stars">★</label>
+          <input type="radio" id="star1" name="rating" value="1"><label for="star1" title="1 star">★</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="review-comment">Review Feedback *</label>
+        <textarea 
+          id="review-comment" 
+          name="comment" 
+          class="form-control" 
+          rows="3" 
+          placeholder="Share your experience (e.g. Arrived on time, neatly fixed the switchboard, polite behavior)..." 
+          required
+        ></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
